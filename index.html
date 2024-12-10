@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            // About:blank cloaking
+            if(window.location.href !== "about:blank") {
+                const doc = window.open("about:blank", "_blank");
+                if(doc) {
+                    doc.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <style>
+                                html, body {
+                                    width: 100%;
+                                    height: 100%;
+                                    margin: 0;
+                                    padding: 0;
+                                    overflow: hidden;
+                                }
+                                iframe {
+                                    position: fixed;
+                                    top: 0;
+                                    left: 0;
+                                    width: 100%;
+                                    height: 100%;
+                                    border: none;
+                                    margin: 0;
+                                    padding: 0;
+                                    overflow: hidden;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <iframe width="100%" height="100%" src="${window.location.href}" frameborder="0"></iframe>
+                        </body>
+                        </html>
+                    `);
+                    doc.document.close();
+                    window.location.replace("about:blank");
+                }
+            }
+
+            // Prevent inspection
+            setInterval(() => {
+                if (window.outerWidth - window.innerWidth > 160 || 
+                    window.outerHeight - window.innerHeight > 160 || 
+                    window.devtools?.open) {
+                    window.location.href = 'about:blank';
+                }
+            }, 50);
+
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey && e.shiftKey) || (e.ctrlKey && e.key === 'u') || e.key === 'F12') {
+                    e.preventDefault();
+                    window.location.href = 'about:blank';
+                }
+            }, true);
+
+            document.addEventListener('contextmenu', e => e.preventDefault());
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silicon Launcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a, #1a0000);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            perspective: 1000px;
+        }
+
+        /* Enhanced Login Overlay with 3D effect */
+        #loginOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #150000, #000000);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .login-box {
+            background: rgba(255, 0, 0, 0.05);
+            padding: 3rem;
+            border-radius: 15px;
+            border: 1px solid #ff000030;
+            box-shadow: 0 0 30px #ff000020;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #ff3333, #ff0000);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .login-box input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #ff000030;
+            padding: 1rem;
+            color: #fff;
+            margin: 1rem 0;
+            border-radius: 5px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .login-box input:focus {
+            border-color: #ff0000;
+            box-shadow: 0 0 15px #ff000030;
+        }
+
+        #errorMessage {
+            color: #ff3333;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #countdown {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            font-size: 4rem;
+            font-weight: 900;
+            color: #ff3333;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #ff000050;
+        }
+
+        /* Enhanced Container Styles */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Enhanced header animations */
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 3rem;
+            background: rgba(255, 0, 0, 0.05);
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ff000030;
+            box-shadow: 0 0 50px #ff000020;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,0,0,0.1) 0%, transparent 70%);
+            animation: rotateGradient 10s linear infinite;
+        }
+
+        @keyframes rotateGradient {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            font-size: 4.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ff3333, #ff0000, #ff3333);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes shine {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #ff3333;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .clients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3rem;
+            perspective: 1000px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .clients-grid > div {
+            --card-index: 0;
+        }
+
+        .clients-grid > div:nth-child(1) { --card-index: 1; }
+        .clients-grid > div:nth-child(2) { --card-index: 2; }
+        .clients-grid > div:nth-child(3) { --card-index: 3; }
+        .clients-grid > div:nth-child(4) { --card-index: 4; }
+        .clients-grid > div:nth-child(5) { --card-index: 5; }
+        .clients-grid > div:nth-child(6) { --card-index: 6; }
+        .clients-grid > div:nth-child(7) { --card-index: 7; }
+
+        /* Enhanced card animations */
+        .client-card {
+            background: rgba(20, 0, 0, 0.85);
+            border: 2px solid #ff000030;
+            border-radius: 20px;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            z-index: 2;
+        }
+
+        /* Enhanced hover effect */
+        .client-card:hover {
+            transform: translateY(-20px) rotate3d(1, 1, 0, 15deg) scale(1.05);
+            box-shadow: 
+                20px 20px 60px rgba(255, 0, 0, 0.2),
+                -20px -20px 60px rgba(255, 0, 0, 0.1),
+                inset 0 0 40px rgba(255, 0, 0, 0.1);
+            z-index: 3;
+        }
+
+        /* Glowing border effect */
+        .client-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(
+                45deg,
+                transparent 40%,
+                rgba(255, 0, 0, 0.8),
+                rgba(255, 0, 0, 0.3),
+                transparent 60%
+            );
+            border-radius: inherit;
+            z-index: -1;
+            animation: borderRotate 4s linear infinite;
+            background-size: 300% 300%;
+        }
+
+        @keyframes borderRotate {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        /* Floating animation */
+        .client-card {
+            animation: cardFloat 6s ease-in-out infinite;
+            animation-delay: calc(var(--card-index) * 0.2s);
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0) rotate3d(0, 1, 0, 0deg); }
+            50% { transform: translateY(-10px) rotate3d(0, 1, 0, 5deg); }
+        }
+
+        /* Interactive hover effect */
+        .client-card.hover-active {
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Enhanced name effect */
+        .client-name {
+            position: relative;
+            display: inline-block;
+        }
+
+        .client-name::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ff0000, transparent);
+            transition: width 0.3s ease;
+        }
+
+        .client-card:hover .client-name::after {
+            width: 100%;
+        }
+
+        .client-description {
+            color: #ddd;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Enhanced launch button */
+        .launch-btn {
+            display: inline-block;
+            padding: 1rem 3rem;
+            background: linear-gradient(45deg, #ff0000, #800000);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .launch-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            transform: scale(0);
+            transition: transform 0.5s ease-out;
+        }
+
+        .launch-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.5);
+            background: linear-gradient(45deg, #800000, #ff0000);
+        }
+
+        .launch-btn:hover::before {
+            transform: scale(1);
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #150000, #000000);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            font-family: 'Courier New', monospace;
+            flex-direction: column;
+        }
+
+        .terminal-output {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff3333;
+            font-size: 1.2rem;
+            text-align: left;
+            width: 600px;
+        }
+
+        .loading-content {
+            color: #ff3333;
+            font-size: 1.5rem;
+            text-align: left;
+            width: 600px;
+        }
+
+        .loading-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff000050;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .loading-chunk {
+            width: 10%;
+            height: 100%;
+            background: #ff0000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-chunk.active {
+            opacity: 1;
+        }
+
+        .terminal-line {
+            margin: 5px 0;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .terminal-line.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .success-text {
+            color: #00ff00;
+        }
+
+        @keyframes cardExplosion {
+            0% {
+                transform: scale(2) translateX(-200%);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.1) translateX(0);
+            }
+            80% {
+                transform: scale(0.95) translateX(0);
+            }
+            100% {
+                transform: scale(1) translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes flashBang {
+            0% { opacity: 0; }
+            5% { opacity: 0.8; }
+            15% { opacity: 0.3; }
+            25% { opacity: 0.6; }
+            35% { opacity: 0.2; }
+            100% { opacity: 0; }
+        }
+
+        .flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: soft-light;
+        }
+
+        .client-card {
+            /* Keep existing styles */
+            opacity: 0;
+            animation: none; /* Remove the floating animation initially */
+        }
+
+        .client-card.exploded {
+            opacity: 1;
+            animation: cardExplosion 1s cubic-bezier(0.2, 0.8, 0.2, 1.2) forwards,
+                       cardFloat 4s ease-in-out infinite 1s;
+        }
+
+        .terminal-line {
+            margin: 8px 0;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .terminal-line.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .loading-chunk {
+            width: 10%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ff3333);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .loading-chunk.active {
+            opacity: 1;
+            animation: pulseChunk 2s infinite;
+        }
+
+        @keyframes pulseChunk {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.5); }
+            100% { filter: brightness(1); }
+        }
+
+        .client-card {
+            transform-origin: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .client-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.3);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(to right, transparent 95%, #ff000030 100%),
+                linear-gradient(to bottom, transparent 95%, #ff000030 100%);
+            background-size: 50px 50px;
+            z-index: -2;
+            animation: gridMove 20s linear infinite;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, 
+                rgba(255, 0, 0, 0.1) 0%,
+                rgba(0, 0, 0, 0.3) 50%,
+                rgba(0, 0, 0, 0.7) 100%);
+            z-index: -1;
+            animation: pulseBackground 8s ease-in-out infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+
+        @keyframes pulseBackground {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.9; }
+        }
+
+        .background-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #ff0000;
+            border-radius: 50%;
+            filter: blur(1px);
+            animation: particleFloat 15s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        /* Enhanced grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: 
+                linear-gradient(90deg, transparent 98%, #ff000040 100%),
+                linear-gradient(0deg, transparent 98%, #ff000040 100%),
+                radial-gradient(circle at 50% 50%, rgba(255,0,0,0.1) 0%, transparent 80%);
+            background-size: 50px 50px, 50px 50px, 100% 100%;
+            transform-origin: 0 0;
+            animation: gridSpin 60s linear infinite;
+            z-index: -2;
+        }
+
+        @keyframes gridSpin {
+            0% { transform: rotate(0deg) scale(0.5); }
+            100% { transform: rotate(360deg) scale(0.5); }
+        }
+
+        /* Enhanced particles */
+        .particle {
+            width: 3px;
+            height: 3px;
+            background: linear-gradient(45deg, #ff0000, transparent);
+            box-shadow: 0 0 10px #ff0000;
+            filter: blur(1px) contrast(2);
+        }
+
+        /* Add digital noise effect */
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVfJ92AAAACHRSTlMAzN3u/w8fLyPB4CoAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAZdEVYdFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAFElEQVQ4jWNgGAWjYBSMglEwCkgAAAgEAAFPRhHoAAAAAElFTkSuQmCC');
+            opacity: 0.02;
+            z-index: -1;
+            pointer-events: none;
+            animation: noiseAnimation 0.5s infinite;
+        }
+
+        @keyframes noiseAnimation {
+            0% { transform: translate(0, 0); }
+            10% { transform: translate(-1%, -1%); }
+            20% { transform: translate(1%, 1%); }
+            30% { transform: translate(-2%, -2%); }
+            40% { transform: translate(2%, 2%); }
+            50% { transform: translate(-1%, -1%); }
+            60% { transform: translate(1%, 1%); }
+            70% { transform: translate(-2%, -2%); }
+            80% { transform: translate(2%, 2%); }
+            90% { transform: translate(-1%, -1%); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* Enhanced card effects */
+        .client-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, #ff000080, transparent, #ff000080);
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Enhanced loading bar */
+        .loading-chunk.active {
+            background: linear-gradient(90deg, 
+                #ff0000, 
+                #ff3333, 
+                #ff0000
+            );
+            background-size: 200% 100%;
+            animation: moveGradient 2s linear infinite,
+                       pulseChunk 2s infinite;
+        }
+
+        @keyframes moveGradient {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* Add scanline effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom,
+                transparent 50%,
+                rgba(0, 0, 0, 0.05) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        #loginOverlay, #loadingOverlay {
+            z-index: 5;
+            background: radial-gradient(circle at center, rgba(21, 0, 0, 0.95), rgba(0, 0, 0, 0.95));
+        }
+
+        .background-particles,
+        .noise,
+        .scanlines,
+        body::before,
+        body::after {
+            z-index: 0;
+        }
+
+        /* Make overlays semi-transparent to show background */
+        .login-box,
+        .loading-content {
+            background: rgba(255, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Holographic effect for cards */
+        .client-card {
+            position: relative;
+            background: rgba(255, 0, 0, 0.05);
+            border: none;
+            overflow: visible;
+        }
+
+        .client-card::before,
+        .client-card::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(
+                45deg,
+                transparent 40%,
+                rgba(255, 0, 0, 0.8),
+                rgba(255, 0, 0, 0.3),
+                transparent 60%
+            );
+            border-radius: inherit;
+            z-index: -1;
+            animation: borderRotate 4s linear infinite;
+            background-size: 300% 300%;
+        }
+
+        .client-card::after {
+            filter: blur(10px);
+            opacity: 0.3;
+        }
+
+        @keyframes borderRotate {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+        }
+
+        /* Enhanced 3D depth effect */
+        .clients-grid {
+            transform-style: preserve-3d;
+            perspective: 2000px;
+        }
+
+        .client-card:hover {
+            transform: translateY(-20px) rotateX(10deg) rotateY(10deg);
+            box-shadow: 
+                20px 20px 60px rgba(255, 0, 0, 0.2),
+                -20px -20px 60px rgba(255, 0, 0, 0.1),
+                inset 0 0 40px rgba(255, 0, 0, 0.1);
+        }
+
+        /* Advanced button effects */
+        .launch-btn {
+            background: linear-gradient(45deg, 
+                rgba(255, 0, 0, 0.8),
+                rgba(255, 0, 0, 0.5) 50%,
+                rgba(255, 0, 0, 0.8)
+            );
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .launch-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(
+                circle,
+                rgba(255, 255, 255, 0.3) 0%,
+                transparent 70%
+            );
+            transform: scale(0);
+            transition: transform 0.5s ease-out;
+        }
+
+        .launch-btn:hover::before {
+            transform: scale(1);
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Advanced particle system */
+        .particle-system {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle-advanced {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(45deg, #ff0000, transparent);
+            border-radius: 50%;
+            filter: blur(1px);
+        }
+
+        /* Matrix rain effect */
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .matrix-column {
+            position: absolute;
+            top: -100px;
+            width: 20px;
+            color: #ff0000;
+            font-family: monospace;
+            font-size: 16px;
+            text-align: center;
+            opacity: 0.5;
+            animation: matrixRain linear infinite;
+        }
+
+        @keyframes matrixRain {
+            0% { transform: translateY(-100%); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        /* Enhanced Typography */
+        h1 {
+            font-size: 5rem;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            animation: glitchText 5s infinite, shine 3s linear infinite;
+        }
+
+        @keyframes glitchText {
+            0%, 100% { transform: none; filter: none; }
+            92% { transform: skew(-30deg); filter: blur(1px); }
+            93% { transform: skew(30deg); filter: blur(0); }
+            94% { transform: skew(-30deg); filter: blur(1px); }
+            95% { transform: none; filter: none; }
+            96% { transform: skew(30deg); filter: blur(1px); }
+            97% { transform: none; filter: none; }
+        }
+
+        /* Enhanced Card Hover */
+        .client-card {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .client-card:hover {
+            transform: translateY(-30px) scale(1.05) rotate3d(1, 1, 0, 15deg);
+            z-index: 10;
+        }
+
+        .client-card:hover .client-name {
+            text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000, 0 0 40px #ff0000;
+            animation: textPulse 2s infinite;
+        }
+
+        @keyframes textPulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.5); }
+        }
+
+        /* Interactive Background Elements */
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: 
+                linear-gradient(90deg, transparent 97%, #ff000030 98%, transparent 99%),
+                linear-gradient(0deg, transparent 97%, #ff000030 98%, transparent 99%);
+            background-size: 40px 40px;
+            transform-origin: 0 0;
+            animation: gridMove 20s linear infinite;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        /* Enhanced Launch Button */
+        .launch-btn {
+            clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
+            transition: all 0.3s ease;
+        }
+
+        .launch-btn:hover {
+            clip-path: polygon(0 0, 100% 0, 100% 50%, 100% 100%, 0 100%, 0 50%);
+            letter-spacing: 4px;
+        }
+
+        .launch-btn::after {
+            content: '→';
+            margin-left: 10px;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .launch-btn:hover::after {
+            transform: translateX(10px);
+        }
+
+        /* Cyberpunk Decorative Elements */
+        .client-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff0000, transparent);
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .client-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Add corner decorations */
+        .client-card::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-top: 2px solid #ff0000;
+            border-left: 2px solid #ff0000;
+            top: 10px;
+            left: 10px;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .client-card:hover::after {
+            width: 30px;
+            height: 30px;
+            opacity: 1;
+            filter: drop-shadow(0 0 5px #ff0000);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-particles"></div>
+    <div class="noise"></div>
+    <div class="scanlines"></div>
+    <div class="cyber-grid"></div>
+
+    <script>
+        // Start background effects immediately
+        (function() {
+            createParticles();
+            startBackgroundEffects();
+        })();
+    </script>
+
+    <div id="loginOverlay">
+        <div id="countdown">15</div>
+        <div class="login-box">
+            <h2>Access Required</h2>
+            <input type="password" id="passwordInput" placeholder="Enter Password" maxlength="15" autofocus>
+            <div id="errorMessage">Access Denied</div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay">
+        <div class="terminal-output">
+            <!-- Terminal lines will be added dynamically -->
+        </div>
+        <div class="loading-content">
+            <div class="loading-bar">
+                <!-- 10 chunks for progress bar -->
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+                <div class="loading-chunk"></div>
+            </div>
+            <div class="typed-text success-text" style="display: none;">> Security breach successful. Access granted.</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="floating">
+            <h1>Silicon Launcher</h1>
+            <p class="subtitle">Performance-Focused Minecraft Client Launcher</p>
+        </header>
+
+        <div class="clients-grid">
+            <div class="client-card">
+                <h2 class="client-name">Arch Client</h2>
+                <p class="client-description">A Client Launcher that launches 3Bedwars, Tory EUM Edit, and Qubit 16x</p>
+                <a href="arch.html" class="launch-btn">Launch</a>
+            </div>
+
+            <div class="client-card">
+                <h2 class="client-name">BurnClient</h2>
+                <p class="client-description">Double Fps Booster. No Lag and consistent 60+ fps</p>
+                <a href="burn.html" class="launch-btn">Launch</a>
+            </div>
+
+            <div class="client-card">
+                <h2 class="client-name">Dragon X</h2>
+                <p class="client-description">New Click GUI, hacked client for multiplayer only (only aimbot is usable, everything else will get you banned)</p>
+                <a href="dragon.html" class="launch-btn">Launch</a>
+            </div>
+
+            <div class="client-card">
+                <h2 class="client-name">Eaglercraft 1.8.8 WASM-GC</h2>
+                <p class="client-description">Uses the Wasm-GC to run Minecraft 1.8.8, runs with no lag, similar to burnclient. Must have  Experimental WebAssembly JavaScript Promise Integration (JSPI) turned on via chrom://flags</p>
+                <a href="wasm.html" class="launch-btn">Launch</a>
+            </div>
+
+            <div class="client-card">
+                <h2 class="client-name">Shadow Client</h2>
+                <p class="client-description">Modern Minecraft performance client</p>
+                <a href="shadow.html" class="launch-btn">Launch</a>
+            </div>
+
+            <div class="client-card">
+                <h2 class="client-name">Resent Client</h2>
+                <p class="client-description">Modern Minecraft performance client</p>
+                <a href="resent.html" class="launch-btn">Launch</a>
+            </div>
+
+            <div class="client-card">
+                <h2 class="client-name">Astra Client</h2>
+                <p class="client-description">Modern Minecraft performance client</p>
+                <a href="astra.html" class="launch-btn">Launch</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="flash"></div>
+
+    <script>
+        (function() {
+            const handleLogin = function(event) {
+                const input = document.getElementById('passwordInput');
+                const errorMessage = document.getElementById('errorMessage');
+                
+                if (input.value.length === 15) {
+                    sessionStorage.setItem('authenticated', 'true');
+                    document.getElementById('loginOverlay').style.opacity = '0';
+                    clearInterval(closeTimer);
+                    
+                    setTimeout(() => {
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        startLoadingSequence();
+                    }, 500);
+                } else if (input.value.length > 15) {
+                    errorMessage.style.opacity = '1';
+                    input.value = '';
+                    setTimeout(() => {
+                        window.close();
+                        document.body.innerHTML = '';
+                        window.location.href = 'about:blank';
+                    }, 500);
+                }
+            },
+
+            startLoadingSequence = function() {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                const terminalOutput = document.querySelector('.terminal-output');
+                loadingOverlay.style.display = 'flex';
+                
+                const terminalMessages = [
+                    'Initializing quantum breach protocol...',
+                    'Bypassing neural security matrix...',
+                    'Injecting polymorphic shellcode...',
+                    'Deploying zero-day exploit chain...',
+                    'Executing kernel-level rootkit...',
+                    'Neutralizing intrusion detection systems...',
+                    'Establishing encrypted P2P tunnels...',
+                    'Deploying distributed attack vectors...',
+                    'Initiating final breach sequence...'
+                ];
+
+                let chunkIndex = 0;
+                const chunks = document.querySelectorAll('.loading-chunk');
+                
+                function addTerminalLine(text) {
+                    const line = document.createElement('div');
+                    line.className = 'terminal-line';
+                    line.textContent = '> ' + text;
+                    terminalOutput.appendChild(line);
+                    setTimeout(() => line.classList.add('visible'), 50);
+                }
+
+                function progressBar() {
+                    if (chunkIndex < chunks.length) {
+                        chunks[chunkIndex].classList.add('active');
+                        if (chunkIndex < terminalMessages.length) {
+                            addTerminalLine(terminalMessages[chunkIndex]);
+                        }
+                        chunkIndex++;
+                        setTimeout(progressBar, 800);
+                    } else {
+                        const successText = document.querySelector('.success-text');
+                        successText.style.display = 'block';
+                        setTimeout(() => {
+                            loadingOverlay.style.opacity = '0';
+                            setTimeout(() => {
+                                loadingOverlay.style.display = 'none';
+                                document.querySelector('.container').classList.add('visible');
+                                startCardExplosions();
+                            }, 500);
+                        }, 2000);
+                    }
+                }
+
+                progressBar();
+            },
+
+            startCardExplosions = function() {
+                const flash = document.querySelector('.flash');
+                const cards = document.querySelectorAll('.client-card');
+                
+                cards.forEach((card, index) => {
+                    setTimeout(() => {
+                        // Create flash effect
+                        flash.style.animation = 'flashBang 0.3s ease-out';
+                        setTimeout(() => {
+                            flash.style.animation = 'none';
+                        }, 300);
+                        
+                        // Explode card into place
+                        card.classList.add('exploded');
+                    }, index * 200);
+                });
+            };
+
+            // Event listeners and initialization
+            document.getElementById('passwordInput').addEventListener('input', handleLogin);
+
+            // Countdown initialization
+            let timeLeft = 15;
+            const countdownElement = document.getElementById('countdown');
+            let closeTimer;
+
+            function updateCountdown() {
+                timeLeft--;
+                countdownElement.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    window.close();
+                    // Fallback if window.close() doesn't work
+                    document.body.innerHTML = '';
+                    window.location.href = 'about:blank';
+                }
+            }
+
+            // Start countdown if not authenticated
+            if (!sessionStorage.getItem('authenticated')) {
+                closeTimer = setInterval(updateCountdown, 1000);
+            } else {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.querySelector('.container').classList.add('visible');
+            }
+        })();
+
+        function createParticles() {
+            const container = document.querySelector('.background-particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.opacity = Math.random() * 0.5;
+                container.appendChild(particle);
+            }
+        }
+
+        // Call this function after the loading sequence
+        function startBackgroundEffects() {
+            createParticles();
+        }
+
+        // Update the startLoadingSequence function to call startBackgroundEffects
+        const oldStartLoadingSequence = startLoadingSequence;
+        startLoadingSequence = function() {
+            oldStartLoadingSequence();
+            startBackgroundEffects();
+        };
+    </script>
+
+    <script>
+        function createAdvancedParticles() {
+            const container = document.createElement('div');
+            container.className = 'particle-system';
+            document.body.appendChild(container);
+
+            for (let i = 0; i < 100; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle-advanced';
+                
+                // Random initial position
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.top = Math.random() * 100 + 'vh';
+                
+                // Random size
+                const size = Math.random() * 3 + 1;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                
+                // Random animation
+                const duration = Math.random() * 10 + 5;
+                const delay = Math.random() * 5;
+                
+                particle.style.animation = `
+                    particleFloat ${duration}s ${delay}s infinite linear,
+                    particleFade ${duration}s ${delay}s infinite ease-in-out
+                `;
+                
+                container.appendChild(particle);
+            }
+        }
+
+        function createMatrixRain() {
+            const container = document.createElement('div');
+            container.className = 'matrix-rain';
+            document.body.appendChild(container);
+
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
+            const columnCount = Math.floor(window.innerWidth / 20);
+
+            for (let i = 0; i < columnCount; i++) {
+                const column = document.createElement('div');
+                column.className = 'matrix-column';
+                column.style.left = (i * 20) + 'px';
+                
+                const length = Math.floor(Math.random() * 20 + 10);
+                let content = '';
+                
+                for (let j = 0; j < length; j++) {
+                    content += characters[Math.floor(Math.random() * characters.length)] + '<br>';
+                }
+                
+                column.innerHTML = content;
+                column.style.animationDuration = (Math.random() * 10 + 5) + 's';
+                column.style.animationDelay = Math.random() * 5 + 's';
+                
+                container.appendChild(column);
+            }
+        }
+
+        // Initialize advanced effects
+        window.addEventListener('load', () => {
+            createAdvancedParticles();
+            createMatrixRain();
+        });
+    </script>
+
+    <script>
+        // Remove all previous event listeners
+        document.querySelectorAll('.client-card').forEach(card => {
+            const clone = card.cloneNode(true);
+            card.parentNode.replaceChild(clone, card);
+        });
+
+        // Update launch button functionality
+        document.querySelectorAll('.launch-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const clientPath = btn.getAttribute('data-path');
+                const clientName = btn.getAttribute('data-client');
+                if (clientPath && clientName) {
+                    launchClient(clientPath, clientName);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        function launchClient(clientPath, clientName) {
+            try {
+                console.log(`Launching ${clientName}`);
+                window.location.href = clientPath;
+            } catch (error) {
+                console.error('Launch error:', error);
+                alert(`Error launching ${clientName}. Please try again.`);
+            }
+        }
+    </script>
+
+    <script>
+        document.querySelectorAll('.client-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                
+                card.classList.add('hover-active');
+                card.style.transform = `
+                    translateY(-20px)
+                    rotate3d(1, 1, 0, 15deg)
+                    rotateX(${rotateX}deg)
+                    rotateY(${rotateY}deg)
+                    scale(1.05)
+                `;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('hover-active');
+                card.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html> 
